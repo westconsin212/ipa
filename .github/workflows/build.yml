@@ -1,0 +1,43 @@
+name: IPA Derle
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: XcodeGen kur
+        run: brew install xcodegen
+
+      - name: Xcode projesini oluştur
+        run: xcodegen generate
+
+      - name: Derle
+        run: |
+          xcodebuild \
+            -project GeoKamera.xcodeproj \
+            -scheme GeoKamera \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: IPA paketle
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/GeoKamera.app Payload/
+          zip -qr KonumKamera.ipa Payload
+
+      - name: IPA'yı yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: KonumKamera-ipa
+          path: KonumKamera.ipa

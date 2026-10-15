@@ -1,5 +1,6 @@
 import Foundation
 import CoreLocation
+import UIKit
 
 final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var location: CLLocation?
@@ -42,8 +43,26 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         guard let newLocation = locations.last else { return }
         DispatchQueue.main.async {
             self.location = newLocation
+            self.refreshMapIfNeeded(newLocation)
         }
         reverseGeocodeIfNeeded(newLocation)
+    }
+
+    // Hızlı çekim için harita görüntüsünü önceden hazırla
+    @Published var mapImage: UIImage?
+    private var lastMapLocation: CLLocation?
+    private var mapLoading = false
+
+    private func refreshMapIfNeeded(_ newLocation: CLLocation) {
+        if mapLoading { return }
+        if let last = lastMapLocation, newLocation.distance(from: last) < 40, mapImage != nil { return }
+        mapLoading = true
+        lastMapLocation = newLocation
+        Stamper.mapSnapshot(for: newLocation.coordinate) { [weak self] img in
+            guard let self = self else { return }
+            self.mapLoading = false
+            if let img = img { self.mapImage = img } else { self.lastMapLocation = nil }
+        }
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {

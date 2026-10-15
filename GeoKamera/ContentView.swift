@@ -15,6 +15,8 @@ struct ContentView: View {
 
     @State private var showCamera = false
     @State private var showLibrary = false
+    @State private var showQuick = false
+    @State private var showSettings = false
     @State private var captured: CapturedPhoto?
 
     private let accent = Color(red: 1.0, green: 0.78, blue: 0.2)
@@ -34,8 +36,24 @@ struct ContentView: View {
                         .font(.system(size: 30, weight: .heavy))
                         .foregroundColor(.white)
                     Spacer()
+                    Button(action: { showSettings = true }) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 44, height: 44)
+                            .background(Color.white.opacity(0.12))
+                            .clipShape(Circle())
+                    }
                 }
                 .padding(.top, 10)
+
+                if let logo = Brand.watermarkImage {
+                    Image(uiImage: logo)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxHeight: 70)
+                        .padding(.horizontal, 30)
+                }
 
                 locationCard
 
@@ -51,6 +69,22 @@ struct ContentView: View {
                     .frame(height: 74)
                     .background(accent)
                     .cornerRadius(22)
+                }
+
+                Button(action: { showQuick = true }) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "bolt.fill").font(.system(size: 20, weight: .bold))
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Hızlı Çekim").font(.system(size: 19, weight: .bold))
+                            Text("Art arda çek, damgalı direkt galeriye").font(.system(size: 12))
+                                .foregroundColor(Color.white.opacity(0.75))
+                        }
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 62)
+                    .background(Color(red: 0.85, green: 0.2, blue: 0.2))
+                    .cornerRadius(20)
                 }
 
                 Button(action: { showLibrary = true }) {
@@ -87,6 +121,16 @@ struct ContentView: View {
         .fullScreenCover(item: $captured) { photo in
             EditorView(photo: photo)
         }
+        .background(
+            EmptyView()
+                .fullScreenCover(isPresented: $showQuick) {
+                    QuickCameraView().environmentObject(loc)
+                }
+        )
+        .background(
+            EmptyView()
+                .sheet(isPresented: $showSettings) { SettingsView() }
+        )
     }
 
     // MARK: - Konum kartı

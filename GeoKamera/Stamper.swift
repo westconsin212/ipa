@@ -4,7 +4,8 @@ import MapKit
 enum Stamper {
 
     /// Fotoğrafın altına adres, koordinat ve tarih panelini çizer.
-    static func render(base: UIImage, info: StampInfo, note: String, map: UIImage?) -> UIImage {
+    static func render(base: UIImage, info: StampInfo, note: String, map: UIImage?,
+                       watermark: UIImage? = nil, watermarkAlpha: CGFloat = 0.45) -> UIImage {
         let size = base.size
         let u = min(size.width, size.height) / 1000.0
 
@@ -54,6 +55,16 @@ enum Stamper {
 
         return UIGraphicsImageRenderer(size: size, format: format).image { ctx in
             base.draw(in: CGRect(origin: .zero, size: size))
+
+            // Ortada şeffaf filigran
+            if let wm = watermark, wm.size.width > 0, watermarkAlpha > 0 {
+                let ww = size.width * 0.8
+                let wh = wm.size.height * ww / wm.size.width
+                let freeBottom = panel.minY
+                let wy = max(margin, (freeBottom - wh) / 2)
+                wm.draw(in: CGRect(x: (size.width - ww) / 2, y: wy, width: ww, height: wh),
+                        blendMode: .normal, alpha: watermarkAlpha)
+            }
 
             UIColor(white: 0, alpha: 0.58).setFill()
             UIBezierPath(roundedRect: panel, cornerRadius: 20 * u).fill()
